@@ -10,15 +10,15 @@ st.set_page_config(page_title="University AI Assistant", page_icon="🎓", layou
 
 # --- 🔑 SETUP API KEY ---
 try:
-    # Tries to get the key from Streamlit Cloud Secrets
     GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 except:
-    # Fallback for local testing (REPLACE THIS WITH YOUR KEY IF TESTING LOCALLY)
-    # BUT REMOVE IT BEFORE UPLOADING TO GITHUB
+    # Use your key here for local testing only
     GOOGLE_API_KEY = "AIzaSyAv6AB0eToxMx4puRAeCcIN8yJxMghMB4Q"
 
 genai.configure(api_key=GOOGLE_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-pro')
+
+# ✅ FIX APPLIED: Using the exact model name from your list
+gemini_model = genai.GenerativeModel('models/gemini-2.0-flash')
 
 # --- LOAD SYSTEM ---
 @st.cache_resource
@@ -125,35 +125,17 @@ def get_bot_response(message):
     except Exception:
         pass # If Local AI fails, go to Gemini
 
-   # ======================================================
-    # 🤖 PRIORITY 3: FALLBACK TO GEMINI
     # ======================================================
-    # ======================================================
-    # 🤖 PRIORITY 3: FALLBACK TO GEMINI (WITH DEBUG SCANNER)
+    # 🤖 PRIORITY 3: FALLBACK TO GEMINI (Standard Mode)
     # ======================================================
     try:
-        prompt = f"User question: {message}\nAnswer nicely and concisely."
+        # We put the nice prompt back so it answers politely
+        prompt = f"User question: {message}\nAnswer nicely and concisely. If it's a greeting, be friendly."
         response = gemini_model.generate_content(prompt)
         return response.text
-    except Exception as original_error:
-        # 🕵️‍♂️ DEBUG MODE: If the model name failed, let's list what DOES work.
-        try:
-            available_models = []
-            # Ask Google: "What models can I use?"
-            for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
-                    available_models.append(m.name)
-            
-            # Format the list nicely
-            model_list = "\n".join([f"- {name}" for name in available_models])
-            
-            return (f"⚠️ **Model Name Error:** The name we used didn't work.\n\n"
-                    f"✅ **GOOD NEWS:** Your API Key works! Here is the list of models you are allowed to use:\n\n"
-                    f"{model_list}\n\n"
-                    f"👉 **INSTRUCTION:** Pick one name from the list above (e.g., `models/gemini-1.5-flash`), go back to your code, and replace the model name in line 20.")
-        
-        except Exception as e:
-             return f"⚠️ Critical Error: {str(original_error)}"
+    except Exception as e:
+        # If it fails again, show the error clearly
+        return f"⚠️ Google Error: {str(e)}"
 
 # --- MAIN UI ---
 st.title("✨ University Hybrid Bot")
@@ -176,8 +158,4 @@ if prompt := st.chat_input("Ask a question..."):
 
     with st.chat_message("assistant"):
         st.markdown(response)
-
     st.session_state.messages.append({"role": "assistant", "content": response})
-
-
-
