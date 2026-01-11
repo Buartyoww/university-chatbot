@@ -17,8 +17,9 @@ except:
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# ✅ FIX APPLIED: Using the exact model name from your list
-gemini_model = genai.GenerativeModel('models/gemini-2.0-flash')
+# ✅ FIX APPLIED: Switched to "Lite" model to avoid Quota Limits
+# This model is lighter and usually works better for free accounts
+gemini_model = genai.GenerativeModel('models/gemini-2.0-flash-lite-preview-02-05')
 
 # --- LOAD SYSTEM ---
 @st.cache_resource
@@ -126,7 +127,7 @@ def get_bot_response(message):
         pass # If Local AI fails, go to Gemini
 
     # ======================================================
-    # 🤖 PRIORITY 3: FALLBACK TO GEMINI (Standard Mode)
+    # 🤖 PRIORITY 3: FALLBACK TO GEMINI (Lite Mode)
     # ======================================================
     try:
         # We put the nice prompt back so it answers politely
@@ -134,8 +135,10 @@ def get_bot_response(message):
         response = gemini_model.generate_content(prompt)
         return response.text
     except Exception as e:
-        # If it fails again, show the error clearly
-        return f"⚠️ Google Error: {str(e)}"
+        # ⚠️ SAFETY NET: If Gemini fails completely, we don't crash.
+        # We just tell the user to stick to school questions.
+        return (f"⚠️ **Note:** I am having trouble connecting to Google Gemini right now (Error: {str(e)}).\n\n"
+                f"✅ **BUT!** You can still ask me about the University (Deans, Locations, Faculty) and I will answer perfectly!")
 
 # --- MAIN UI ---
 st.title("✨ University Hybrid Bot")
