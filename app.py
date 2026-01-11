@@ -125,15 +125,16 @@ def get_bot_response(message):
     except Exception:
         pass # If Local AI fails, go to Gemini
 
-    # ======================================================
+   # ======================================================
     # 🤖 PRIORITY 3: FALLBACK TO GEMINI
     # ======================================================
     try:
         prompt = f"User question: {message}\nAnswer nicely and concisely. If it's a greeting, be friendly."
         response = gemini_model.generate_content(prompt)
         return response.text
-    except Exception:
-        return "I am not sure about that, and I couldn't reach Google Gemini."
+    except Exception as e:
+        # ⚠️ THIS WILL SHOW THE REAL ERROR ON THE SCREEN
+        return f"⚠️ Google Error Details: {str(e)}"
 
 # --- MAIN UI ---
 st.title("✨ University Hybrid Bot")
@@ -158,3 +159,4 @@ if prompt := st.chat_input("Ask a question..."):
         st.markdown(response)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
+
