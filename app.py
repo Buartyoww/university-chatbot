@@ -128,13 +128,32 @@ def get_bot_response(message):
    # ======================================================
     # 🤖 PRIORITY 3: FALLBACK TO GEMINI
     # ======================================================
+    # ======================================================
+    # 🤖 PRIORITY 3: FALLBACK TO GEMINI (WITH DEBUG SCANNER)
+    # ======================================================
     try:
-        prompt = f"User question: {message}\nAnswer nicely and concisely. If it's a greeting, be friendly."
+        prompt = f"User question: {message}\nAnswer nicely and concisely."
         response = gemini_model.generate_content(prompt)
         return response.text
-    except Exception as e:
-        # ⚠️ THIS WILL SHOW THE REAL ERROR ON THE SCREEN
-        return f"⚠️ Google Error Details: {str(e)}"
+    except Exception as original_error:
+        # 🕵️‍♂️ DEBUG MODE: If the model name failed, let's list what DOES work.
+        try:
+            available_models = []
+            # Ask Google: "What models can I use?"
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    available_models.append(m.name)
+            
+            # Format the list nicely
+            model_list = "\n".join([f"- {name}" for name in available_models])
+            
+            return (f"⚠️ **Model Name Error:** The name we used didn't work.\n\n"
+                    f"✅ **GOOD NEWS:** Your API Key works! Here is the list of models you are allowed to use:\n\n"
+                    f"{model_list}\n\n"
+                    f"👉 **INSTRUCTION:** Pick one name from the list above (e.g., `models/gemini-1.5-flash`), go back to your code, and replace the model name in line 20.")
+        
+        except Exception as e:
+             return f"⚠️ Critical Error: {str(original_error)}"
 
 # --- MAIN UI ---
 st.title("✨ University Hybrid Bot")
@@ -159,5 +178,6 @@ if prompt := st.chat_input("Ask a question..."):
         st.markdown(response)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
+
 
 
