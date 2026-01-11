@@ -18,7 +18,7 @@ except:
     GOOGLE_API_KEY = "AIzaSyAv6AB0eToxMx4puRAeCcIN8yJxMghMB4Q"
 
 genai.configure(api_key=GOOGLE_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+gemini_model = genai.GenerativeModel('gemini-pro')
 
 # --- LOAD SYSTEM ---
 @st.cache_resource
@@ -159,4 +159,5 @@ if prompt := st.chat_input("Ask a question..."):
         st.markdown(response)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
+
 
